@@ -1,3 +1,15 @@
-import app from "../src/app.js";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
 
-export default app;
+dotenv.config();
+
+beforeAll(async () => {
+    await
+mongoose.connect(process.env.MONGO_URI);
+});
+
+afterAll(async () => {
+    await mongoose.connection.close();
+});
+
+

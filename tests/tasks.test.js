@@ -1,11 +1,26 @@
+import { jest } from "@jest/globals";
 import request from "supertest";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 import app from "../src/app.js";
+import connectDB from "../src/config/db.js";
+
+dotenv.config();
+
+jest.setTimeout(30000);
 
 let token;
 let taskId;
 
 beforeAll(async () => {
-  // Register
+  await connectDB();
+
+  if (mongoose.connection.collections.users) {
+    await mongoose.connection.collections.users.deleteMany({
+      email: "task@example.com"
+    });
+  }
+
   await request(app)
     .post("/api/auth/register")
     .send({
@@ -14,23 +29,31 @@ beforeAll(async () => {
       password: "123456"
     });
 
-  // Login
-  const res = await request(app)
+  const loginRes = await request(app)
     .post("/api/auth/login")
     .send({
       email: "task@example.com",
       password: "123456"
     });
 
-  token = res.body.token;
+  token = loginRes.body.token;
+
+  if (!token) {
+    throw new Error("Login failed: No token returned");
+  }
+});
+
+afterAll(async () => {
+  if (mongoose.connection.readyState === 1) {
+    await mongoose.connection.db.dropDatabase();
+    await mongoose.connection.close();
+  }
 });
 
 describe("Task Routes", () => {
 
   it("should not allow access without token", async () => {
-    const res = await request(app)
-      .get("/api/tasks");
-
+    const res = await request(app).get("/api/tasks");
     expect(res.statusCode).toBe(401);
   });
 
@@ -40,7 +63,7 @@ describe("Task Routes", () => {
       .set("Authorization", `Bearer ${token}`)
       .send({
         title: "Test Task",
-        description: "Testing"
+        description: "Testing task creation"
       });
 
     expect(res.statusCode).toBe(201);

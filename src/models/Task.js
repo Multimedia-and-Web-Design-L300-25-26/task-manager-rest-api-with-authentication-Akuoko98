@@ -1,17 +1,21 @@
 import mongoose from "mongoose";
 
 // Create Task schema
-// Fields:
-// - title (String, required)
-// - description (String)
-// - completed (Boolean, default false)
-// - owner (ObjectId, ref "User", required)
-// - createdAt (default Date.now)
-
+// Fields
 const taskSchema = new mongoose.Schema({
-  
-});
+ title: {
+    type: String,
+    required: true
+  },
+ description: {
+    type: String
+  },
+ user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  }
 
-const Task = mongoose.model("Task", taskSchema);
+}, { timestamps: true });
 
-export default Task;
+export default mongoose.model("Task", taskSchema);
