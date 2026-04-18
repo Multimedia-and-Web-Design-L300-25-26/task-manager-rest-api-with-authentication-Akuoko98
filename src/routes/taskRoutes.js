@@ -4,24 +4,36 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Apply auth middleware
-router.use(authMiddleware);
+// CREATE TASK
+router.post("/", authMiddleware, async (req, res) => {
+  try {
+    const { title, description } = req.body;
 
-// POST /api/tasks
-router.post("/", async (req, res) => {
-  // - Create task
-  // - Attach owner = req.user._id
+    const task = await Task.create({
+      title,
+      description,
+      user: req.user._id
+    });
+
+    res.status(201).json(task);
+
+  } catch (error) {
+    console.error("Create Task Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
 });
+// GET USER TASKS
+router.get("/", authMiddleware, async (req, res) => {
+  try {
 
-// GET /api/tasks
-router.get("/", async (req, res) => {
-  // - Return only tasks belonging to req.user
-});
+    const tasks = await Task.find({ user: req.user._id });
 
-// DELETE /api/tasks/:id
-router.delete("/:id", async (req, res) => {
-  // - Check ownership
-  // - Delete task
+    res.status(200).json(tasks);
+
+  } catch (error) {
+    console.error("Get Tasks Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
 });
 
 export default router;
